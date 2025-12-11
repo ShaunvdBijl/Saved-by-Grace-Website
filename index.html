@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saved by Grace Bakery | Home</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo-wrap">
+      <img src="assets/logo.jpeg" alt="Saved by Grace Bakery logo" class="logo">
+      <span class="brand">Saved by Grace Bakery</span>
+    </div>
+    <nav class="nav">
+      <a href="index.html" class="nav-link active">Home</a>
+      <a href="about.html" class="nav-link">About</a>
+      <a href="products.html" class="nav-link">Products</a>
+      <a href="auth.html" class="nav-link nav-cta">Login / Sign Up</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <p class="eyebrow">From oven to heart</p>
+        <h1>Handcrafted cakes baked with love and faith.</h1>
+        <p class="lead">Order custom cakes, cupcakes, and pastries crafted to celebrate every moment.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="products.html">View Products</a>
+          <a class="btn ghost" href="about.html">Meet the Baker</a>
+        </div>
+        <div class="hero-meta">
+          <span>Made to order</span>
+          <span aria-hidden="true">•</span>
+          <span>Local delivery available</span>
+        </div>
+      </div>
+      <div class="hero-media">
+        <div class="carousel" id="productCarousel" aria-label="Featured products">
+          <div class="carousel-track" id="carouselTrack">
+            <!-- Slides injected by home.js -->
+          </div>
+          <button class="carousel-btn prev" aria-label="Previous slide" id="carouselPrev">‹</button>
+          <button class="carousel-btn next" aria-label="Next slide" id="carouselNext">›</button>
+          <div class="carousel-dots" id="carouselDots" aria-hidden="true"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature-grid">
+      <article class="feature-card">
+        <h3>Custom Designs</h3>
+        <p>Share your vision—colors, themes, and flavors tailored to your celebration.</p>
+      </article>
+      <article class="feature-card">
+        <h3>Premium Ingredients</h3>
+        <p>Real butter, fresh cream, and hand-picked toppings for memorable bites.</p>
+      </article>
+      <article class="feature-card">
+        <h3>On-Time Delivery</h3>
+        <p>Reliable scheduling so your desserts arrive fresh for the big moment.</p>
+      </article>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> Saved by Grace Bakery. All rights reserved.</p>
+    <div class="footer-links">
+      <a href="mailto:orders@savedbygracebakery.com">orders@savedbygracebakery.com</a>
+      <span aria-hidden="true">•</span>
+      <a href="tel:+1-000-000-0000">Call to order</a>
+    </div>
+  </footer>
+
+  <script src="scripts/data/products.js"></script>
+  <script src="scripts/home.js"></script>
+  <script src="scripts/main.js"></script>
+</body>
+</html>
+
