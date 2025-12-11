@@ -1,13 +1,13 @@
 (() => {
   if (!Array.isArray(PRODUCTS) || PRODUCTS.length === 0) return;
 
-  const track = document.getElementById("carouselTrack");
-  const dotsWrap = document.getElementById("carouselDots");
-  const prevBtn = document.getElementById("carouselPrev");
-  const nextBtn = document.getElementById("carouselNext");
-  const slides = PRODUCTS.slice(0, 5);
+  const track = document.getElementById("pageCarouselTrack");
+  const dotsWrap = document.getElementById("pageCarouselDots");
+  const prevBtn = document.getElementById("pageCarouselPrev");
+  const nextBtn = document.getElementById("pageCarouselNext");
+  if (!track || !dotsWrap) return;
 
-  slides.forEach((item, idx) => {
+  PRODUCTS.forEach((item, idx) => {
     const slide = document.createElement("div");
     slide.className = "carousel-slide";
 
@@ -20,26 +20,22 @@
     caption.className = "slide-caption";
     caption.innerHTML = `<strong>${item.name}</strong><br>${item.description}`;
     slide.appendChild(caption);
-    track?.appendChild(slide);
+    track.appendChild(slide);
 
     const dot = document.createElement("button");
     dot.className = "dot";
     dot.setAttribute("aria-label", `Go to slide ${idx + 1}`);
-    dotsWrap?.appendChild(dot);
+    dotsWrap.appendChild(dot);
   });
 
   let index = 0;
-  const total = slides.length;
-  const update = () => {
-    if (!track) return;
-    track.style.transform = `translateX(-${index * 100}%)`;
-    const dots = dotsWrap?.querySelectorAll(".dot") || [];
-    dots.forEach((d, i) => d.classList.toggle("active", i === index));
-  };
-
+  const total = PRODUCTS.length;
   const goTo = (i) => {
     index = (i + total) % total;
-    update();
+    track.style.transform = `translateX(-${index * 100}%)`;
+    dotsWrap.querySelectorAll(".dot").forEach((dot, dotIdx) => {
+      dot.classList.toggle("active", dotIdx === index);
+    });
   };
 
   const resetTimer = () => {
@@ -55,18 +51,17 @@
     goTo(index + 1);
     resetTimer();
   });
-  dotsWrap?.querySelectorAll(".dot").forEach((dot, i) => {
+  dotsWrap.querySelectorAll(".dot").forEach((dot, dotIdx) => {
     dot.addEventListener("click", () => {
-      goTo(i);
+      goTo(dotIdx);
       resetTimer();
     });
   });
 
-  update();
+  goTo(0);
   let timer = setInterval(() => goTo(index + 1), 4000);
 
-  // Pause on hover
-  track?.addEventListener("mouseenter", () => clearInterval(timer));
-  track?.addEventListener("mouseleave", resetTimer);
+  track.addEventListener("mouseenter", () => clearInterval(timer));
+  track.addEventListener("mouseleave", resetTimer);
 })();
 
