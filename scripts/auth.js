@@ -3,6 +3,7 @@
   const signupTab = document.getElementById("signupTab");
   const loginForm = document.getElementById("loginForm");
   const signupForm = document.getElementById("signupForm");
+  const authMessage = document.getElementById("authMessage");
 
   const setActive = (tab) => {
     const isLogin = tab === "login";
@@ -12,20 +13,220 @@
     signupTab?.setAttribute("aria-selected", (!isLogin).toString());
     loginForm?.classList.toggle("hidden", !isLogin);
     signupForm?.classList.toggle("hidden", isLogin);
+    clearMessage();
   };
 
   loginTab?.addEventListener("click", () => setActive("login"));
   signupTab?.addEventListener("click", () => setActive("signup"));
 
-  const handleSubmit = (event, type) => {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    const payload = Object.fromEntries(formData.entries());
-    console.log(`[Auth placeholder] ${type}`, payload);
-    alert(`This will connect to Firebase (${type}).`);
+  const showMessage = (message, type = "error") => {
+    if (!authMessage) return;
+    authMessage.textContent = message;
+    authMessage.className = `auth-message ${type}`;
+    authMessage.setAttribute("role", "alert");
+    authMessage.style.display = "block";
   };
 
-  loginForm?.addEventListener("submit", (e) => handleSubmit(e, "login"));
-  signupForm?.addEventListener("submit", (e) => handleSubmit(e, "signup"));
+  const clearMessage = () => {
+    if (authMessage) {
+      authMessage.textContent = "";
+      authMessage.className = "auth-message";
+      authMessage.style.display = "none";
+    }
+  };
+
+  const waitForFirebase = () =>
+    new Promise((resolve, reject) => {
+      // Fast path
+      if (window.firebaseAuth && window.firebaseDb) {
+        resolve(true);
+        return;
+      }
+
+      let settled = false;
+
+      const finish = (ok, message) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        clearInterval(poller);
+        window.removeEventListener('firebaseReady', onReady);
+        window.removeEventListener('firebaseError', onError);
+        ok ? resolve(true) : reject(new Error(message));
+      };
+
+      const timeout = setTimeout(() => {
+        finish(false, "Firebase initialization timeout. Please refresh the page or check your network.");
+      }, 15000); // 15s timeout
+
+      const poller = setInterval(() => {
+        if (window.firebaseAuth && window.firebaseDb) {
+          finish(true);
+        }
+      }, 200);
+
+      const onReady = () => {
+        if (window.firebaseAuth && window.firebaseDb) {
+          finish(true);
+        }
+      };
+
+      const onError = (event) => {
+        const msg = event?.detail?.error?.message || "Unknown Firebase initialization error";
+        finish(false, `Firebase initialization failed: ${msg}`);
+      };
+
+      window.addEventListener('firebaseReady', onReady);
+      window.addEventListener('firebaseError', onError);
+    });
+
+  const handleSignUp = async (event) => {
+    event.preventDefault();
+    clearMessage();
+
+    const formData = new FormData(event.target);
+    const displayName = formData.get("displayName")?.trim();
+    const email = formData.get("email")?.trim();
+    const password = formData.get("password");
+
+    // Validation
+    if (!displayName || !email || !password) {
+      showMessage("Please fill in all fields.");
+      return;
+    }
+
+    if (password.length < 6) {
+      showMessage("Password must be at least 6 characters long.");
+      return;
+    }
+
+    try {
+      await waitForFirebase();
+
+      // Import Firebase Auth functions
+      const { createUserWithEmailAndPassword, updateProfile } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+      const { doc, setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+
+      // Create user account
+      const userCredential = await createUserWithEmailAndPassword(
+        window.firebaseAuth,
+        email,
+        password
+      );
+
+      const user = userCredential.user;
+
+      // Update user profile with display name
+      await updateProfile(user, {
+        displayName: displayName
+      });
+
+      // Store user information in Firestore
+      await setDoc(doc(window.firebaseDb, "users", user.uid), {
+        uid: user.uid,
+        displayName: displayName,
+        email: email,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      // Success message
+      showMessage(`Account created successfully! Welcome, ${displayName}!`, "success");
+      
+      // Clear form
+      signupForm.reset();
+      
+      // Optionally switch to login tab after a delay
+      setTimeout(() => {
+        setActive("login");
+      }, 2000);
+
+    } catch (error) {
+      console.error("Sign up error:", error);
+      
+      // Handle specific Firebase errors
+      let errorMessage = "An error occurred during sign up. Please try again.";
+      
+      switch (error.code) {
+        case "auth/email-already-in-use":
+          errorMessage = "This email is already registered. Please use a different email or try logging in.";
+          break;
+        case "auth/invalid-email":
+          errorMessage = "Please enter a valid email address.";
+          break;
+        case "auth/weak-password":
+          errorMessage = "Password is too weak. Please choose a stronger password.";
+          break;
+        case "auth/network-request-failed":
+          errorMessage = "Network error. Please check your connection and try again.";
+          break;
+        default:
+          errorMessage = error.message || errorMessage;
+      }
+      
+      showMessage(errorMessage);
+    }
+  };
+
+  const handleLogin = async (event) => {
+    event.preventDefault();
+    clearMessage();
+
+    const formData = new FormData(event.target);
+    const email = formData.get("email")?.trim();
+    const password = formData.get("password");
+
+    if (!email || !password) {
+      showMessage("Please fill in all fields.");
+      return;
+    }
+
+    try {
+      await waitForFirebase();
+
+      const { signInWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+      
+      await signInWithEmailAndPassword(window.firebaseAuth, email, password);
+      
+      showMessage("Login successful! Redirecting...", "success");
+      
+      // Redirect to home page after successful login
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 1500);
+
+    } catch (error) {
+      console.error("Login error:", error);
+      
+      let errorMessage = "An error occurred during login. Please try again.";
+      
+      switch (error.code) {
+        case "auth/user-not-found":
+          errorMessage = "No account found with this email. Please sign up first.";
+          break;
+        case "auth/wrong-password":
+          errorMessage = "Incorrect password. Please try again.";
+          break;
+        case "auth/invalid-email":
+          errorMessage = "Please enter a valid email address.";
+          break;
+        case "auth/invalid-credential":
+          errorMessage = "Invalid email or password. Please try again.";
+          break;
+        case "auth/network-request-failed":
+          errorMessage = "Network error. Please check your connection and try again.";
+          break;
+        default:
+          errorMessage = error.message || errorMessage;
+      }
+      
+      showMessage(errorMessage);
+    }
+  };
+
+  loginForm?.addEventListener("submit", handleLogin);
+  signupForm?.addEventListener("submit", handleSignUp);
 })();
+
+
 

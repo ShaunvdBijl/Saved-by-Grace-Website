@@ -1,19 +1,28 @@
-// Replace with your Firebase project config when ready
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+// Firebase configuration
+export const firebaseConfig = {
+  apiKey: "AIzaSyD5CfxfVL7Q1RhUqmZdlMGZ0V8No1754no",
+  authDomain: "saved-by-grace.firebaseapp.com",
+  projectId: "saved-by-grace",
+  storageBucket: "saved-by-grace.firebasestorage.app",
+  messagingSenderId: "900401870748",
+  appId: "1:900401870748:web:c4f0d49b84f43edb95fa59",
+  measurementId: "G-7G0M2YXHLW"
 };
 
-// eslint-disable-next-line no-unused-vars
-function initFirebase() {
-  if (!window.firebase) {
-    console.warn("Firebase SDK not loaded yet.");
-    return null;
-  }
-  return firebase.initializeApp(firebaseConfig);
+// Firebase instances (initialized in auth.html)
+// These will be set by the initialization script
+export let app = null;
+export let analytics = null;
+export let auth = null;
+export let db = null;
+
+// Function to set Firebase instances after initialization
+export function setFirebaseInstances(firebaseApp, firebaseAnalytics, firebaseAuth, firebaseDb) {
+  app = firebaseApp;
+  analytics = firebaseAnalytics;
+  auth = firebaseAuth;
+  db = firebaseDb;
 }
+
+
 
