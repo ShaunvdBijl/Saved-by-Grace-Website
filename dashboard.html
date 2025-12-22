@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saved by Grace Bakery | Dashboard</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo-wrap">
+      <img src="assets/logo.jpeg" alt="Saved by Grace Bakery logo" class="logo">
+      <span class="brand">Saved by Grace Bakery</span>
+    </div>
+    <nav class="nav">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="about.html" class="nav-link">About</a>
+      <a href="products.html" class="nav-link">Products</a>
+      <a href="dashboard.html" class="nav-link active">Dashboard</a>
+      <a href="auth.html" class="nav-link nav-cta">Login / Sign Up</a>
+    </nav>
+  </header>
+
+  <main class="page-shell">
+    <section class="dashboard-hero">
+      <div>
+        <p class="eyebrow">Welcome back</p>
+        <h1 id="greeting">Hello!</h1>
+        <p class="lead">Browse products, place new orders, and see your recent picks.</p>
+      </div>
+      <div class="dashboard-meta">
+        <div class="meta-card">
+          <p class="meta-title">Recent orders</p>
+          <p class="meta-value" id="recentCount">—</p>
+        </div>
+        <div class="meta-card">
+          <p class="meta-title">Suggestions</p>
+          <p class="meta-value" id="suggestionsCount">—</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-grid">
+      <article class="panel">
+        <div class="panel-header">
+          <h2>Recent Orders</h2>
+          <button class="text-btn" id="refreshOrders">Refresh</button>
+        </div>
+        <div id="ordersList" class="list-stack muted">Loading orders...</div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-header">
+          <h2>Suggestions</h2>
+        </div>
+        <div id="suggestionsList" class="cards-row muted">Loading suggestions...</div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Products</h2>
+        <p class="muted">Select a product to place an order.</p>
+      </div>
+      <div id="productsGrid" class="products-grid dashboard-products"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> Saved by Grace Bakery. All rights reserved.</p>
+    <div class="footer-links">
+      <a href="mailto:orders@savedbygracebakery.com">orders@savedbygracebakery.com</a>
+      <span aria-hidden="true">•</span>
+      <a href="tel:+1-000-000-0000">Call to order</a>
+    </div>
+  </footer>
+
+  <!-- Order modal -->
+  <div class="modal hidden" id="orderModal" role="dialog" aria-modal="true" aria-labelledby="orderModalTitle">
+    <div class="modal-content">
+      <button class="modal-close" id="orderModalClose" aria-label="Close">×</button>
+      <h3 id="orderModalTitle">Place Order</h3>
+      <p id="orderModalDesc" class="muted"></p>
+      <form id="orderForm" class="order-form">
+        <label>Quantity
+          <input type="number" name="quantity" id="orderQuantity" min="1" value="1" required>
+        </label>
+        <button type="submit" class="btn primary">Submit Order</button>
+      </form>
+      <div id="orderMessage" class="auth-message" role="alert" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { firebaseConfig, setFirebaseInstances } from './scripts/firebase.js';
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      let analytics = null;
+      try {
+        analytics = getAnalytics(app);
+      } catch (err) {
+        console.warn('Analytics init skipped:', err);
+      }
+      setFirebaseInstances(app, analytics, auth, db);
+      window.firebaseApp = app;
+      window.firebaseAuth = auth;
+      window.firebaseDb = db;
+      window.dispatchEvent(new CustomEvent('firebaseReady', { detail: { auth, db } }));
+      console.log('Firebase initialized (dashboard)');
+    } catch (error) {
+      console.error('Firebase initialization error:', error);
+      window.dispatchEvent(new CustomEvent('firebaseError', { detail: { error } }));
+    }
+  </script>
+
+  <script src="scripts/data/products.js"></script>
+  <script src="scripts/dashboard.js"></script>
+  <script src="scripts/main.js"></script>
+</body>
+</html>
+
