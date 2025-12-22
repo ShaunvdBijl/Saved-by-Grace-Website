@@ -1,3 +1,6 @@
+import { getAllProducts } from "./products-service.js";
+import { waitForFirebaseReady } from "./auth-utils.js";
+
 (() => {
   const greetingEl = document.getElementById("greeting");
   const recentCountEl = document.getElementById("recentCount");
@@ -17,39 +20,7 @@
 
   let currentUser = null;
   let selectedProduct = null;
-
-  const waitForFirebase = () =>
-    new Promise((resolve, reject) => {
-      if (window.firebaseAuth && window.firebaseDb) {
-        resolve(true);
-        return;
-      }
-      let settled = false;
-      const finish = (ok, message) => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timeout);
-        clearInterval(poller);
-        window.removeEventListener("firebaseReady", onReady);
-        window.removeEventListener("firebaseError", onError);
-        ok ? resolve(true) : reject(new Error(message));
-      };
-      const timeout = setTimeout(() => {
-        finish(false, "Firebase initialization timeout. Please refresh or check your network.");
-      }, 15000);
-      const poller = setInterval(() => {
-        if (window.firebaseAuth && window.firebaseDb) finish(true);
-      }, 200);
-      const onReady = () => {
-        if (window.firebaseAuth && window.firebaseDb) finish(true);
-      };
-      const onError = (event) => {
-        const msg = event?.detail?.error?.message || "Unknown Firebase initialization error";
-        finish(false, `Firebase initialization failed: ${msg}`);
-      };
-      window.addEventListener("firebaseReady", onReady);
-      window.addEventListener("firebaseError", onError);
-    });
+  let productsCache = [];
 
   const showOrderMessage = (msg, type = "error") => {
     if (!orderMessage) return;
@@ -74,22 +45,22 @@
     greetingEl.textContent = `Hi, ${firstName}!`;
   };
 
-  const renderProducts = () => {
+  const renderProducts = (items) => {
     if (!productsGridEl) return;
     productsGridEl.innerHTML = "";
     const frag = document.createDocumentFragment();
-    PRODUCTS.forEach((p) => {
+    items.forEach((p) => {
       const card = document.createElement("article");
       card.className = "product-card order-card";
 
       const img = document.createElement("img");
-      img.src = p.image;
+      img.src = p.imageUrl || p.image;
       img.alt = p.name;
       card.appendChild(img);
 
       const body = document.createElement("div");
       body.className = "product-body";
-      body.innerHTML = `<h3>${p.name}</h3><p class="muted">$${p.price.toFixed(2)}</p><p>${p.description}</p>`;
+      body.innerHTML = `<h3>${p.name}</h3><p class="muted">$${(p.price || 0).toFixed(2)}</p><p>${p.description || ""}</p>`;
 
       const btn = document.createElement("button");
       btn.className = "btn primary full";
@@ -132,7 +103,7 @@
     ordersListEl.appendChild(list);
   };
 
-  const renderSuggestions = (orders) => {
+  const renderSuggestions = (orders, products) => {
     if (!suggestionsListEl) return;
     let topProducts = [];
     if (orders.length) {
@@ -142,12 +113,12 @@
       });
       topProducts = Object.entries(counts)
         .sort((a, b) => b[1] - a[1])
-        .map(([productId]) => PRODUCTS.find((p) => p.id === productId))
+        .map(([productId]) => products.find((p) => p.id === productId))
         .filter(Boolean)
         .slice(0, 3);
     }
     if (!topProducts.length) {
-      topProducts = PRODUCTS.slice(0, 3);
+      topProducts = products.slice(0, 3);
     }
     suggestionsCountEl.textContent = String(topProducts.length);
     suggestionsListEl.innerHTML = "";
@@ -156,10 +127,10 @@
       const card = document.createElement("article");
       card.className = "suggest-card";
       card.innerHTML = `
-        <img src="${p.image}" alt="${p.name}">
+        <img src="${p.imageUrl || p.image}" alt="${p.name}">
         <div>
           <h4>${p.name}</h4>
-          <p class="muted">$${p.price.toFixed(2)}</p>
+          <p class="muted">$${(p.price || 0).toFixed(2)}</p>
         </div>
       `;
       card.addEventListener("click", () => openOrderModal(p));
@@ -171,7 +142,7 @@
   const openOrderModal = (product) => {
     selectedProduct = product;
     orderModalTitle.textContent = `Order ${product.name}`;
-    orderModalDesc.textContent = `$${product.price.toFixed(2)} • ${product.description}`;
+    orderModalDesc.textContent = `$${(product.price || 0).toFixed(2)} • ${product.description || ""}`;
     orderQuantity.value = "1";
     clearOrderMessage();
     orderModal.classList.remove("hidden");
@@ -205,7 +176,7 @@
       const snap = await getDocs(q);
       const orders = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       renderOrders(orders);
-      renderSuggestions(orders);
+      renderSuggestions(orders, productsCache);
     } catch (err) {
       console.error("Load orders error:", err);
       ordersListEl.textContent = "Could not load orders.";
@@ -229,7 +200,7 @@
       return;
     }
     try {
-      await waitForFirebase();
+      await waitForFirebaseReady();
       const { addDoc, collection, serverTimestamp } = await import(
         "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
       );
@@ -238,8 +209,9 @@
         productName: selectedProduct.name,
         price: selectedProduct.price,
         quantity: qty,
+        uid: currentUser.uid,
         status: "pending",
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
       });
       showOrderMessage("Order submitted! We'll confirm soon.", "success");
       await loadOrders();
@@ -251,7 +223,7 @@
   };
 
   const initAuth = async () => {
-    await waitForFirebase();
+    await waitForFirebaseReady();
     const { onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
     onAuthStateChanged(window.firebaseAuth, async (user) => {
       if (!user) {
@@ -261,12 +233,16 @@
       currentUser = user;
       const userDoc = await fetchUserDoc(user.uid).catch(() => null);
       greet(userDoc);
-      renderProducts();
+      try {
+        productsCache = await getAllProducts(window.firebaseDb);
+      } catch (e) {
+        if (Array.isArray(window.PRODUCTS)) productsCache = window.PRODUCTS;
+      }
+      renderProducts(productsCache);
       loadOrders();
     });
   };
 
-  // Handlers
   orderModalClose?.addEventListener("click", closeOrderModal);
   orderModal?.addEventListener("click", (e) => {
     if (e.target === orderModal) closeOrderModal();
@@ -274,7 +250,6 @@
   orderForm?.addEventListener("submit", submitOrder);
   refreshOrdersBtn?.addEventListener("click", loadOrders);
 
-  // Kick off
   initAuth().catch((err) => {
     console.error("Dashboard init error:", err);
     if (ordersListEl) ordersListEl.textContent = "Could not initialize dashboard.";
