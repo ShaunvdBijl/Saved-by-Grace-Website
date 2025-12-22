@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saved by Grace Bakery | Login</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo-wrap">
+      <img src="assets/logo.jpeg" alt="Saved by Grace Bakery logo" class="logo">
+      <span class="brand">Saved by Grace Bakery</span>
+    </div>
+    <nav class="nav">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="about.html" class="nav-link">About</a>
+      <a href="products.html" class="nav-link">Products</a>
+      <a href="auth.html" class="nav-link active nav-cta">Login / Sign Up</a>
+    </nav>
+  </header>
+
+  <main class="page-shell auth-shell">
+    <section class="auth-card">
+      <div class="tab-group" role="tablist">
+        <button class="tab-btn active" id="loginTab" role="tab" aria-selected="true">Login</button>
+        <button class="tab-btn" id="signupTab" role="tab" aria-selected="false">Sign Up</button>
+      </div>
+
+      <form id="loginForm" class="auth-form" aria-labelledby="loginTab">
+        <label>Email
+          <input type="email" name="email" autocomplete="email" required>
+        </label>
+        <label>Password
+          <input type="password" name="password" autocomplete="current-password" required>
+        </label>
+        <button type="submit" class="btn primary">Login</button>
+      </form>
+
+      <form id="signupForm" class="auth-form hidden" aria-labelledby="signupTab">
+        <label>Name
+          <input type="text" name="displayName" autocomplete="name" required>
+        </label>
+        <label>Email
+          <input type="email" name="email" autocomplete="email" required>
+        </label>
+        <label>Password
+          <input type="password" name="password" autocomplete="new-password" required>
+        </label>
+        <button type="submit" class="btn primary">Create Account</button>
+      </form>
+
+      <div id="authMessage" class="auth-message" role="alert" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> Saved by Grace Bakery. All rights reserved.</p>
+    <div class="footer-links">
+      <a href="mailto:orders@savedbygracebakery.com">orders@savedbygracebakery.com</a>
+      <span aria-hidden="true">•</span>
+      <a href="tel:+1-000-000-0000">Call to order</a>
+    </div>
+  </footer>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
+    import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { firebaseConfig, setFirebaseInstances } from './scripts/firebase.js';
+
+    try {
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      let analytics = null;
+      try {
+        analytics = getAnalytics(app);
+      } catch (analyticsError) {
+        console.warn('Analytics init skipped (non-HTTPS or blocked):', analyticsError);
+      }
+      
+      // Set Firebase instances in firebase.js module
+      setFirebaseInstances(app, analytics, auth, db);
+      
+      // Make Firebase available globally for non-module scripts
+      window.firebaseApp = app;
+      window.firebaseAuth = auth;
+      window.firebaseAnalytics = analytics;
+      window.firebaseDb = db;
+      
+      // Dispatch custom event to signal Firebase is ready
+      window.dispatchEvent(new CustomEvent('firebaseReady', { detail: { auth, db } }));
+      console.log('Firebase initialized successfully');
+    } catch (error) {
+      console.error('Firebase initialization error:', error);
+      window.dispatchEvent(new CustomEvent('firebaseError', { detail: { error } }));
+    }
+  </script>
+  <script src="scripts/auth.js"></script>
+  <script src="scripts/main.js"></script>
+</body>
+</html>
+

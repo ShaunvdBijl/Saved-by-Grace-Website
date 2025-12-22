@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saved by Grace Bakery | Products</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo-wrap">
+      <img src="assets/logo.jpeg" alt="Saved by Grace Bakery logo" class="logo">
+      <span class="brand">Saved by Grace Bakery</span>
+    </div>
+    <nav class="nav">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="about.html" class="nav-link">About</a>
+      <a href="products.html" class="nav-link active">Products</a>
+      <a href="auth.html" class="nav-link nav-cta">Login / Sign Up</a>
+    </nav>
+  </header>
+
+  <main class="page-shell">
+    <section class="page-hero">
+      <p class="eyebrow">Our menu</p>
+      <h1>Signature cakes, cupcakes, and sweet treats.</h1>
+      <p class="lead">Browse our favorites or request a custom bake tailored to your celebration.</p>
+    </section>
+
+    <section class="products-grid" id="productsGrid" aria-live="polite">
+      <!-- Product cards injected by products.js -->
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> Saved by Grace Bakery. All rights reserved.</p>
+    <div class="footer-links">
+      <a href="mailto:orders@savedbygracebakery.com">orders@savedbygracebakery.com</a>
+      <span aria-hidden="true">•</span>
+      <a href="tel:+1-000-000-0000">Call to order</a>
+    </div>
+  </footer>
+
+  <script src="scripts/data/products.js"></script>
+  <script src="scripts/products.js"></script>
+  <script src="scripts/main.js"></script>
+</body>
+</html>
+
