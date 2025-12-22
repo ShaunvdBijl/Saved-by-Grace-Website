@@ -134,6 +134,7 @@
         lastName,
         phone,
         email: email,
+        role: "user",
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
@@ -197,11 +198,20 @@
       await signInWithEmailAndPassword(window.firebaseAuth, email, password);
       
       showMessage("Login successful! Redirecting...", "success");
-      
-      // Redirect to home page after successful login
-      setTimeout(() => {
-        window.location.href = "index.html";
-      }, 1500);
+
+      // Fetch role and redirect accordingly
+      try {
+        const role = await fetchUserRole(window.firebaseDb, userCredential.user.uid);
+        const destination = role === "user" ? "dashboard.html" : "index.html";
+        setTimeout(() => {
+          window.location.href = destination;
+        }, 800);
+      } catch (err) {
+        console.warn("Could not fetch user role, defaulting to dashboard:", err);
+        setTimeout(() => {
+          window.location.href = "dashboard.html";
+        }, 800);
+      }
 
     } catch (error) {
       console.error("Login error:", error);
@@ -234,6 +244,15 @@
 
   loginForm?.addEventListener("submit", handleLogin);
   signupForm?.addEventListener("submit", handleSignUp);
+
+  async function fetchUserRole(db, uid) {
+    const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+    const ref = doc(db, "users", uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return "user";
+    const data = snap.data();
+    return data.role || "user";
+  }
 
   function validatePassword(pw) {
     if (!pw || pw.length < 8) {
