@@ -429,6 +429,11 @@ img {
   font-size: 0.95rem;
 }
 
+.help-text {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .auth-message {
   margin-top: 1rem;
   padding: 0.85rem 1rem;

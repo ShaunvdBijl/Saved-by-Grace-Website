@@ -41,14 +41,21 @@
       </form>
 
       <form id="signupForm" class="auth-form hidden" aria-labelledby="signupTab">
-        <label>Name
-          <input type="text" name="displayName" autocomplete="name" required>
+        <label>First Name
+          <input type="text" name="firstName" autocomplete="given-name" required>
+        </label>
+        <label>Last Name
+          <input type="text" name="lastName" autocomplete="family-name" required>
         </label>
         <label>Email
           <input type="email" name="email" autocomplete="email" required>
         </label>
+        <label>Phone (9 digits)
+          <input type="tel" name="phone" inputmode="numeric" pattern="\\d{9}" autocomplete="tel" required>
+        </label>
         <label>Password
           <input type="password" name="password" autocomplete="new-password" required>
+          <small class="help-text">Min 8 chars, 2 specials, 1 uppercase, 1 lowercase.</small>
         </label>
         <button type="submit" class="btn primary">Create Account</button>
       </form>
