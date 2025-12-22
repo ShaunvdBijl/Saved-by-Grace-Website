@@ -85,18 +85,27 @@
     clearMessage();
 
     const formData = new FormData(event.target);
-    const displayName = formData.get("displayName")?.trim();
+    const firstName = formData.get("firstName")?.trim();
+    const lastName = formData.get("lastName")?.trim();
+    const phone = formData.get("phone")?.trim();
     const email = formData.get("email")?.trim();
     const password = formData.get("password");
 
     // Validation
-    if (!displayName || !email || !password) {
+    if (!firstName || !lastName || !phone || !email || !password) {
       showMessage("Please fill in all fields.");
       return;
     }
 
-    if (password.length < 6) {
-      showMessage("Password must be at least 6 characters long.");
+    const phoneOk = /^\d{9}$/.test(phone);
+    if (!phoneOk) {
+      showMessage("Phone number must be exactly 9 digits.");
+      return;
+    }
+
+    const passwordOk = validatePassword(password);
+    if (!passwordOk.valid) {
+      showMessage(passwordOk.message);
       return;
     }
 
@@ -108,30 +117,29 @@
       const { doc, setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
 
       // Create user account
-      const userCredential = await createUserWithEmailAndPassword(
-        window.firebaseAuth,
-        email,
-        password
-      );
+      const userCredential = await createUserWithEmailAndPassword(window.firebaseAuth, email, password);
 
       const user = userCredential.user;
 
       // Update user profile with display name
       await updateProfile(user, {
-        displayName: displayName
+        displayName: `${firstName} ${lastName}`
       });
 
       // Store user information in Firestore
       await setDoc(doc(window.firebaseDb, "users", user.uid), {
         uid: user.uid,
-        displayName: displayName,
+        displayName: `${firstName} ${lastName}`,
+        firstName,
+        lastName,
+        phone,
         email: email,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
 
       // Success message
-      showMessage(`Account created successfully! Welcome, ${displayName}!`, "success");
+      showMessage(`Account created successfully! Welcome, ${firstName}!`, "success");
       
       // Clear form
       signupForm.reset();
@@ -226,6 +234,23 @@
 
   loginForm?.addEventListener("submit", handleLogin);
   signupForm?.addEventListener("submit", handleSignUp);
+
+  function validatePassword(pw) {
+    if (!pw || pw.length < 8) {
+      return { valid: false, message: "Password must be at least 8 characters." };
+    }
+    const specials = pw.match(/[^A-Za-z0-9]/g)?.length || 0;
+    if (specials < 2) {
+      return { valid: false, message: "Password needs at least 2 special characters." };
+    }
+    if (!/[A-Z]/.test(pw)) {
+      return { valid: false, message: "Password needs at least one uppercase letter." };
+    }
+    if (!/[a-z]/.test(pw)) {
+      return { valid: false, message: "Password needs at least one lowercase letter." };
+    }
+    return { valid: true, message: "" };
+  }
 })();
 
 
