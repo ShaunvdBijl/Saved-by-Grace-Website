@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Saved by Grace Bakery | Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo-wrap">
+      <img src="assets/logo.jpeg" alt="Saved by Grace Bakery logo" class="logo">
+      <span class="brand">Saved by Grace Bakery</span>
+    </div>
+    <nav class="nav">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="dashboard.html" class="nav-link">User Dashboard</a>
+      <a href="admin.html" class="nav-link active nav-cta">Admin</a>
+    </nav>
+  </header>
+
+  <main class="page-shell">
+    <section class="dashboard-hero">
+      <div>
+        <p class="eyebrow">Admin</p>
+        <h1 id="adminGreeting">Welcome, Anna</h1>
+      </div>
+      <div class="dashboard-meta">
+        <div class="meta-card">
+          <p class="meta-title">Incoming orders</p>
+          <p class="meta-value" id="adminOrdersCount">—</p>
+        </div>
+        <div class="meta-card">
+          <p class="meta-title">Clients</p>
+          <p class="meta-value" id="adminClientsCount">—</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Admin Tools</h2>
+      </div>
+      <div class="list-stack">
+        <button class="btn full" data-view="orders">View incoming orders</button>
+        <button class="btn full" data-view="clients">View clients</button>
+        <button class="btn full" data-view="edit">Edit products</button>
+        <button class="btn full" data-view="add">Add product</button>
+        <button class="btn full warning" data-view="delete">Delete product</button>
+      </div>
+    </section>
+
+    <section id="adminViewOrders" class="panel admin-view">
+      <div class="panel-header">
+        <h2>Incoming orders</h2>
+      </div>
+      <div id="adminOrdersList" class="list-stack muted">Loading orders...</div>
+    </section>
+
+    <section id="adminViewClients" class="panel admin-view hidden">
+      <div class="panel-header">
+        <h2>Clients</h2>
+      </div>
+      <div id="adminClientsList" class="list-stack muted">Loading clients...</div>
+    </section>
+
+    <section id="adminViewEdit" class="panel admin-view hidden">
+      <div class="panel-header">
+        <h2>Edit products</h2>
+      </div>
+      <div id="adminEditProducts" class="products-grid dashboard-products"></div>
+    </section>
+
+    <section id="adminViewAdd" class="panel admin-view hidden">
+      <div class="panel-header">
+        <h2>Add product</h2>
+      </div>
+      <form id="adminAddForm" class="order-form">
+        <label>Name
+          <input type="text" name="name" required>
+        </label>
+        <label>Description
+          <textarea name="description" rows="3" required></textarea>
+        </label>
+        <label>Price
+          <input type="number" name="price" step="0.01" min="0" required>
+        </label>
+        <label>Tags (comma separated)
+          <input type="text" name="tags">
+        </label>
+        <label>Image URL (png / jpeg)
+          <input type="url" name="imageUrl" required>
+        </label>
+        <button type="submit" class="btn primary">Create product</button>
+      </form>
+      <div id="adminAddMessage" class="auth-message" aria-live="polite"></div>
+    </section>
+
+    <section id="adminViewDelete" class="panel admin-view hidden">
+      <div class="panel-header">
+        <h2>Delete product</h2>
+      </div>
+      <p class="muted">Click a product to delete it (you will be asked twice to confirm).</p>
+      <div id="adminDeleteProducts" class="products-grid dashboard-products"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> Saved by Grace Bakery. All rights reserved.</p>
+  </footer>
+
+  <!-- Firebase init -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
+    import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { firebaseConfig, setFirebaseInstances } from './scripts/firebase.js';
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      let analytics = null;
+      try {
+        analytics = getAnalytics(app);
+      } catch (err) {
+        console.warn('Analytics init skipped:', err);
+      }
+      setFirebaseInstances(app, analytics, auth, db);
+      window.firebaseApp = app;
+      window.firebaseAuth = auth;
+      window.firebaseDb = db;
+      window.dispatchEvent(new CustomEvent('firebaseReady', { detail: { auth, db } }));
+    } catch (error) {
+      console.error('Firebase initialization error:', error);
+      window.dispatchEvent(new CustomEvent('firebaseError', { detail: { error } }));
+    }
+  </script>
+
+  <script src="scripts/data/products.js"></script> <!-- optional fallback -->
+  <script type="module" src="scripts/admin.js"></script>
+  <script src="scripts/main.js"></script>
+</body>
+</html>
+

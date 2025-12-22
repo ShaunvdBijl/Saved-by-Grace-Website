@@ -565,6 +565,12 @@ img {
   width: 100%;
 }
 
+.btn.warning {
+  background: #fbe9e9;
+  color: #b43636;
+  border: 1px solid #f3c6c6;
+}
+
 .dashboard-products {
   margin-top: 1rem;
 }

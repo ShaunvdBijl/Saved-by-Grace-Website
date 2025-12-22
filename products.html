@@ -44,8 +44,27 @@
     </div>
   </footer>
 
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { firebaseConfig, setFirebaseInstances } from './scripts/firebase.js';
+    try {
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      setFirebaseInstances(app, null, auth, db);
+      window.firebaseApp = app;
+      window.firebaseAuth = auth;
+      window.firebaseDb = db;
+      window.dispatchEvent(new CustomEvent('firebaseReady', { detail: { auth, db } }));
+    } catch (error) {
+      console.error('Firebase initialization error:', error);
+      window.dispatchEvent(new CustomEvent('firebaseError', { detail: { error } }));
+    }
+  </script>
   <script src="scripts/data/products.js"></script>
-  <script src="scripts/products.js"></script>
+  <script type="module" src="scripts/products.js"></script>
   <script src="scripts/main.js"></script>
 </body>
 </html>
