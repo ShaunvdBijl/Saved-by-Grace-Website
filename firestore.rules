@@ -1,25 +1,40 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users collection - users can read/write their own data
-    match /users/{userId} {
-      // Allow read if user is authenticated and reading their own data
-      allow read: if request.auth != null && request.auth.uid == userId;
-      
-      // Allow create if user is authenticated and creating their own document
-      allow create: if request.auth != null && request.auth.uid == userId;
-      
-      // Allow update if user is authenticated and updating their own document
-      allow update: if request.auth != null && request.auth.uid == userId;
-      
-      // Don't allow delete (users shouldn't delete their own accounts via Firestore)
-      allow delete: if false;
+    function isSignedIn() {
+      return request.auth != null;
     }
-    
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    // Users collection - users manage their own doc, admins manage all
+    match /users/{userId} {
+      allow read, update, delete: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) || isAdmin();
+    }
+
+    // Products collection - readable by anyone, writable by admins only
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Orders subcollection under each user
+    match /users/{userId}/orders/{orderId} {
+      allow read, create, update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
     // Default: deny all other access
     match /{document=**} {
       allow read, write: if false;
     }
   }
 }
-
