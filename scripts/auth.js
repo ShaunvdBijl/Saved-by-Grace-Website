@@ -97,9 +97,11 @@
       return;
     }
 
-    const phoneOk = /^\d{9}$/.test(phone);
+    // Relaxed phone validation: strip non-digits, check length 9-15
+    const cleanPhone = phone.replace(/\D/g, '');
+    const phoneOk = cleanPhone.length >= 9 && cleanPhone.length <= 15;
     if (!phoneOk) {
-      showMessage("Phone number must be exactly 9 digits.");
+      showMessage("Please enter a valid phone number (9-15 digits).");
       return;
     }
 
@@ -141,10 +143,10 @@
 
       // Success message
       showMessage(`Account created successfully! Welcome, ${firstName}!`, "success");
-      
+
       // Clear form
       signupForm.reset();
-      
+
       // Optionally switch to login tab after a delay
       setTimeout(() => {
         setActive("login");
@@ -152,10 +154,10 @@
 
     } catch (error) {
       console.error("Sign up error:", error);
-      
+
       // Handle specific Firebase errors
       let errorMessage = "An error occurred during sign up. Please try again.";
-      
+
       switch (error.code) {
         case "auth/email-already-in-use":
           errorMessage = "This email is already registered. Please use a different email or try logging in.";
@@ -172,7 +174,7 @@
         default:
           errorMessage = error.message || errorMessage;
       }
-      
+
       showMessage(errorMessage);
     }
   };
@@ -194,9 +196,9 @@
       await waitForFirebase();
 
       const { signInWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-      
+
       await signInWithEmailAndPassword(window.firebaseAuth, email, password);
-      
+
       showMessage("Login successful! Redirecting...", "success");
 
       // Fetch role and redirect accordingly
@@ -215,9 +217,9 @@
 
     } catch (error) {
       console.error("Login error:", error);
-      
+
       let errorMessage = "An error occurred during login. Please try again.";
-      
+
       switch (error.code) {
         case "auth/user-not-found":
           errorMessage = "No account found with this email. Please sign up first.";
@@ -237,7 +239,7 @@
         default:
           errorMessage = error.message || errorMessage;
       }
-      
+
       showMessage(errorMessage);
     }
   };
