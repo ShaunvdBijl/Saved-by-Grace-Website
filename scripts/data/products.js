@@ -1,5 +1,5 @@
 // Update image paths to match your assets folder
-const PRODUCTS = [
+window.PRODUCTS = [
   {
     id: "product1",
     name: "Signature Cake 1",

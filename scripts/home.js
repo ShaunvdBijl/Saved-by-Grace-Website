@@ -74,6 +74,7 @@ import { waitForFirebaseReady } from "./auth-utils.js";
     await waitForFirebaseReady();
     items = await getAllProducts(window.firebaseDb);
   } catch (e) {
+    console.error("Firebase load failed, falling back to local data:", e);
     if (Array.isArray(window.PRODUCTS)) items = window.PRODUCTS;
   }
   renderCarousel(items.slice(0, 5));
