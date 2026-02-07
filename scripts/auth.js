@@ -1,23 +1,7 @@
 (() => {
-  const loginTab = document.getElementById("loginTab");
-  const signupTab = document.getElementById("signupTab");
   const loginForm = document.getElementById("loginForm");
   const signupForm = document.getElementById("signupForm");
   const authMessage = document.getElementById("authMessage");
-
-  const setActive = (tab) => {
-    const isLogin = tab === "login";
-    loginTab?.classList.toggle("active", isLogin);
-    signupTab?.classList.toggle("active", !isLogin);
-    loginTab?.setAttribute("aria-selected", isLogin.toString());
-    signupTab?.setAttribute("aria-selected", (!isLogin).toString());
-    loginForm?.classList.toggle("hidden", !isLogin);
-    signupForm?.classList.toggle("hidden", isLogin);
-    clearMessage();
-  };
-
-  loginTab?.addEventListener("click", () => setActive("login"));
-  signupTab?.addEventListener("click", () => setActive("signup"));
 
   const showMessage = (message, type = "error") => {
     if (!authMessage) return;
@@ -142,14 +126,14 @@
       });
 
       // Success message
-      showMessage(`Account created successfully! Welcome, ${firstName}!`, "success");
+      showMessage(`Account created successfully! Welcome, ${firstName}! Redirecting to login...`, "success");
 
       // Clear form
       signupForm.reset();
 
-      // Optionally switch to login tab after a delay
+      // Redirect to login page
       setTimeout(() => {
-        setActive("login");
+        window.location.href = "login.html";
       }, 2000);
 
     } catch (error) {
@@ -202,8 +186,9 @@
       showMessage("Login successful! Redirecting...", "success");
 
       // Fetch role and redirect accordingly
+      const user = window.firebaseAuth.currentUser;
       try {
-        const role = await fetchUserRole(window.firebaseDb, userCredential.user.uid);
+        const role = await fetchUserRole(window.firebaseDb, user.uid);
         const destination = role === "user" ? "dashboard.html" : "index.html";
         setTimeout(() => {
           window.location.href = destination;
@@ -244,8 +229,13 @@
     }
   };
 
-  loginForm?.addEventListener("submit", handleLogin);
-  signupForm?.addEventListener("submit", handleSignUp);
+  if (loginForm) {
+    loginForm.addEventListener("submit", handleLogin);
+  }
+
+  if (signupForm) {
+    signupForm.addEventListener("submit", handleSignUp);
+  }
 
   async function fetchUserRole(db, uid) {
     const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
@@ -273,6 +263,3 @@
     return { valid: true, message: "" };
   }
 })();
-
-
-
