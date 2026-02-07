@@ -227,7 +227,7 @@ import { waitForFirebaseReady } from "./auth-utils.js";
     const { onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
     onAuthStateChanged(window.firebaseAuth, async (user) => {
       if (!user) {
-        window.location.href = "auth.html";
+        window.location.href = "login.html";
         return;
       }
       currentUser = user;

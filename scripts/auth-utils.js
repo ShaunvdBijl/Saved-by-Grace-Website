@@ -52,7 +52,7 @@ export async function requireAdmin() {
   return new Promise((resolve) => {
     onAuthStateChanged(window.firebaseAuth, async (user) => {
       if (!user) {
-        window.location.href = "auth.html";
+        window.location.href = "login.html";
         return;
       }
       const userDoc = await getCurrentUserDoc(window.firebaseDb, user.uid);
