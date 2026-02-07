@@ -243,6 +243,25 @@ import { waitForFirebaseReady } from "./auth-utils.js";
     });
   };
 
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    try {
+      await waitForFirebaseReady();
+      const { signOut } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+      await signOut(window.firebaseAuth);
+      window.location.href = "login.html";
+    } catch (error) {
+      console.error("Logout error:", error);
+      alert("Failed to log out. Please try again.");
+    }
+  };
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", handleLogout);
+  }
+
   orderModalClose?.addEventListener("click", closeOrderModal);
   orderModal?.addEventListener("click", (e) => {
     if (e.target === orderModal) closeOrderModal();
