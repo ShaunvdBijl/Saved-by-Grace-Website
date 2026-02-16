@@ -200,9 +200,16 @@
           window.location.href = destination;
         }, 800);
       } catch (err) {
-        console.warn("Could not fetch user role, defaulting to dashboard:", err);
+        console.error("Could not fetch user role:", err);
+        // Default to dashboard as it is the safest "authenticated" route for a customer
+        // But user requested "only go if credentials correct" - credentials ARE correct here (login success).
+        // The issue is role is unknown.
+        // Let's redirect to index.html (Home) as a safe fallback instead of dashboard if role fails.
+        // Or better, just stay on page and show error?
+        // User said "instead of an error leading to dashboard..."
+        // Use index.html as safe fallback.
         setTimeout(() => {
-          window.location.href = "dashboard.html";
+          window.location.href = "index.html";
         }, 800);
       }
 
