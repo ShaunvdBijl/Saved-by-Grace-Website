@@ -262,4 +262,68 @@
     }
     return { valid: true, message: "" };
   }
+  const forgotPasswordLink = document.getElementById("forgotPasswordLink");
+  const resetModal = document.getElementById("resetModal");
+  const resetModalClose = document.getElementById("resetModalClose");
+  const resetForm = document.getElementById("resetForm");
+  const resetMessage = document.getElementById("resetMessage");
+
+  const showResetMessage = (msg, type = "error") => {
+    if (!resetMessage) return;
+    resetMessage.textContent = msg;
+    resetMessage.className = `auth-message ${type}`;
+    resetMessage.style.display = "block";
+  };
+
+  const clearResetMessage = () => {
+    if (!resetMessage) return;
+    resetMessage.textContent = "";
+    resetMessage.className = "auth-message";
+    resetMessage.style.display = "none";
+  };
+
+  const openResetModal = (e) => {
+    e?.preventDefault();
+    clearResetMessage();
+    resetModal?.classList.remove("hidden");
+  };
+
+  const closeResetModal = () => {
+    resetModal?.classList.add("hidden");
+    clearResetMessage();
+    resetForm?.reset();
+  };
+
+  const handlePasswordReset = async (e) => {
+    e.preventDefault();
+    clearResetMessage();
+
+    const email = document.getElementById("resetEmail")?.value?.trim();
+    if (!email) {
+      showResetMessage("Please enter your email address.");
+      return;
+    }
+
+    try {
+      await waitForFirebase();
+      const { sendPasswordResetEmail } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+
+      await sendPasswordResetEmail(window.firebaseAuth, email);
+      showResetMessage("Password reset email sent! Check your inbox.", "success");
+      setTimeout(closeResetModal, 3000);
+    } catch (error) {
+      console.error("Password reset error:", error);
+      let msg = "Failed to send reset email. Please try again.";
+      if (error.code === "auth/user-not-found") msg = "No account found with this email.";
+      if (error.code === "auth/invalid-email") msg = "Invalid email address.";
+      showResetMessage(msg);
+    }
+  };
+
+  forgotPasswordLink?.addEventListener("click", openResetModal);
+  resetModalClose?.addEventListener("click", closeResetModal);
+  resetModal?.addEventListener("click", (e) => {
+    if (e.target === resetModal) closeResetModal();
+  });
+  resetForm?.addEventListener("submit", handlePasswordReset);
 })();
