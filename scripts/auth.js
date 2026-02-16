@@ -188,7 +188,10 @@
       // Fetch role and redirect accordingly
       const user = window.firebaseAuth.currentUser;
       try {
+        console.log("Login success. User UID:", user.uid);
         const role = await fetchUserRole(window.firebaseDb, user.uid);
+        console.log("Fetched Role:", role);
+
         let destination = "index.html";
         if (role === "admin") {
           destination = "admin.html";
@@ -196,6 +199,7 @@
           destination = "dashboard.html";
         }
 
+        console.log("Redirecting to:", destination);
         setTimeout(() => {
           window.location.href = destination;
         }, 800);
@@ -251,12 +255,21 @@
   }
 
   async function fetchUserRole(db, uid) {
-    const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
-    const ref = doc(db, "users", uid);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) return "user";
-    const data = snap.data();
-    return data.role || "user";
+    try {
+      const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+      const ref = doc(db, "users", uid);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) {
+        console.warn("User document not found for:", uid);
+        return "user";
+      }
+      const data = snap.data();
+      console.log("User data:", data);
+      return data.role || "user";
+    } catch (e) {
+      console.error("Error in fetchUserRole:", e);
+      throw e;
+    }
   }
 
   function validatePassword(pw) {
