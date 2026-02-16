@@ -189,7 +189,13 @@
       const user = window.firebaseAuth.currentUser;
       try {
         const role = await fetchUserRole(window.firebaseDb, user.uid);
-        const destination = role === "user" ? "dashboard.html" : "index.html";
+        let destination = "index.html";
+        if (role === "admin") {
+          destination = "admin.html";
+        } else if (role === "user") {
+          destination = "dashboard.html";
+        }
+
         setTimeout(() => {
           window.location.href = destination;
         }, 800);
