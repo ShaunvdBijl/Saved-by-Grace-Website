@@ -192,10 +192,18 @@
         const role = await fetchUserRole(window.firebaseDb, user.uid);
         console.log("Fetched Role:", role);
 
+        if (!role) {
+          console.error("No user profile found for UID:", user.uid);
+          showMessage("Login successful, but user profile is missing. Please contact support.");
+          return;
+        }
+
         let destination = "index.html";
-        if (role === "admin") {
+        const normalizedRole = String(role).toLowerCase();
+
+        if (normalizedRole === "admin") {
           destination = "admin.html";
-        } else if (role === "user") {
+        } else if (normalizedRole === "user") {
           destination = "dashboard.html";
         }
 
@@ -261,7 +269,7 @@
       const snap = await getDoc(ref);
       if (!snap.exists()) {
         console.warn("User document not found for:", uid);
-        return "user";
+        return null;
       }
       const data = snap.data();
       console.log("User data:", data);
