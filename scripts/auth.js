@@ -1,23 +1,7 @@
 (() => {
-  const loginTab = document.getElementById("loginTab");
-  const signupTab = document.getElementById("signupTab");
   const loginForm = document.getElementById("loginForm");
   const signupForm = document.getElementById("signupForm");
   const authMessage = document.getElementById("authMessage");
-
-  const setActive = (tab) => {
-    const isLogin = tab === "login";
-    loginTab?.classList.toggle("active", isLogin);
-    signupTab?.classList.toggle("active", !isLogin);
-    loginTab?.setAttribute("aria-selected", isLogin.toString());
-    signupTab?.setAttribute("aria-selected", (!isLogin).toString());
-    loginForm?.classList.toggle("hidden", !isLogin);
-    signupForm?.classList.toggle("hidden", isLogin);
-    clearMessage();
-  };
-
-  loginTab?.addEventListener("click", () => setActive("login"));
-  signupTab?.addEventListener("click", () => setActive("signup"));
 
   const showMessage = (message, type = "error") => {
     if (!authMessage) return;
@@ -97,9 +81,11 @@
       return;
     }
 
-    const phoneOk = /^\d{9}$/.test(phone);
+    // Relaxed phone validation: strip non-digits, check length 9-15
+    const cleanPhone = phone.replace(/\D/g, '');
+    const phoneOk = cleanPhone.length >= 9 && cleanPhone.length <= 15;
     if (!phoneOk) {
-      showMessage("Phone number must be exactly 9 digits.");
+      showMessage("Please enter a valid phone number (9-15 digits).");
       return;
     }
 
@@ -140,14 +126,14 @@
       });
 
       // Success message
-      showMessage(`Account created successfully! Welcome, ${firstName}!`, "success");
+      showMessage(`Account created successfully! Welcome, ${firstName}! Redirecting to login...`, "success");
 
       // Clear form
       signupForm.reset();
 
-      // Optionally switch to login tab after a delay
+      // Redirect to login page
       setTimeout(() => {
-        setActive("login");
+        window.location.href = "login.html";
       }, 2000);
 
     } catch (error) {
@@ -200,9 +186,16 @@
       showMessage("Login successful! Redirecting...", "success");
 
       // Fetch role and redirect accordingly
+      const user = window.firebaseAuth.currentUser;
       try {
-        const role = await fetchUserRole(window.firebaseDb, userCredential.user.uid);
-        const destination = role === "user" ? "dashboard.html" : "index.html";
+        const role = await fetchUserRole(window.firebaseDb, user.uid);
+        let destination = "index.html";
+        if (role === "admin") {
+          destination = "admin.html";
+        } else if (role === "user") {
+          destination = "dashboard.html";
+        }
+
         setTimeout(() => {
           window.location.href = destination;
         }, 800);
@@ -249,8 +242,13 @@
     }
   };
 
-  loginForm?.addEventListener("submit", handleLogin);
-  signupForm?.addEventListener("submit", handleSignUp);
+  if (loginForm) {
+    loginForm.addEventListener("submit", handleLogin);
+  }
+
+  if (signupForm) {
+    signupForm.addEventListener("submit", handleSignUp);
+  }
 
   async function fetchUserRole(db, uid) {
     const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
@@ -277,7 +275,68 @@
     }
     return { valid: true, message: "" };
   }
+  const forgotPasswordLink = document.getElementById("forgotPasswordLink");
+  const resetModal = document.getElementById("resetModal");
+  const resetModalClose = document.getElementById("resetModalClose");
+  const resetForm = document.getElementById("resetForm");
+  const resetMessage = document.getElementById("resetMessage");
+
+  const showResetMessage = (msg, type = "error") => {
+    if (!resetMessage) return;
+    resetMessage.textContent = msg;
+    resetMessage.className = `auth-message ${type}`;
+    resetMessage.style.display = "block";
+  };
+
+  const clearResetMessage = () => {
+    if (!resetMessage) return;
+    resetMessage.textContent = "";
+    resetMessage.className = "auth-message";
+    resetMessage.style.display = "none";
+  };
+
+  const openResetModal = (e) => {
+    e?.preventDefault();
+    clearResetMessage();
+    resetModal?.classList.remove("hidden");
+  };
+
+  const closeResetModal = () => {
+    resetModal?.classList.add("hidden");
+    clearResetMessage();
+    resetForm?.reset();
+  };
+
+  const handlePasswordReset = async (e) => {
+    e.preventDefault();
+    clearResetMessage();
+
+    const email = document.getElementById("resetEmail")?.value?.trim();
+    if (!email) {
+      showResetMessage("Please enter your email address.");
+      return;
+    }
+
+    try {
+      await waitForFirebase();
+      const { sendPasswordResetEmail } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+
+      await sendPasswordResetEmail(window.firebaseAuth, email);
+      showResetMessage("Password reset email sent! Check your inbox.", "success");
+      setTimeout(closeResetModal, 3000);
+    } catch (error) {
+      console.error("Password reset error:", error);
+      let msg = "Failed to send reset email. Please try again.";
+      if (error.code === "auth/user-not-found") msg = "No account found with this email.";
+      if (error.code === "auth/invalid-email") msg = "Invalid email address.";
+      showResetMessage(msg);
+    }
+  };
+
+  forgotPasswordLink?.addEventListener("click", openResetModal);
+  resetModalClose?.addEventListener("click", closeResetModal);
+  resetModal?.addEventListener("click", (e) => {
+    if (e.target === resetModal) closeResetModal();
+  });
+  resetForm?.addEventListener("submit", handlePasswordReset);
 })();
-
-
-
