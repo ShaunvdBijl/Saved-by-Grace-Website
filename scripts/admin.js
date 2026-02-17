@@ -28,34 +28,40 @@ import { getAllProducts, addProduct, updateProduct, deleteProduct } from "./prod
 
   async function loadOrders() {
     if (!ordersListEl) return;
-    ordersListEl.textContent = "Loading orders...";
+    ordersListEl.innerHTML = '<div class="muted">Loading orders...</div>';
     try {
       const { collectionGroup, getDocs, orderBy, query } = await import(
         "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
       );
+      // querying collectionGroup "orders" requires an index on createdAt desc
       const q = query(collectionGroup(db, "orders"), orderBy("createdAt", "desc"));
       const snap = await getDocs(q);
       const orders = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       ordersCountEl.textContent = String(orders.length);
+
       if (!orders.length) {
-        ordersListEl.textContent = "No orders yet.";
+        ordersListEl.innerHTML = '<div class="muted">No orders found.</div>';
         return;
       }
+
       const list = document.createElement("div");
       list.className = "list-stack";
       orders.forEach((o) => {
         const row = document.createElement("div");
         row.className = "order-row";
         const dateStr = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleString() : "—";
+        const statusClass = o.status === 'completed' ? 'success' : (o.status === 'cancelled' ? 'error' : 'warning');
+
         row.innerHTML = `
-          <div>
+          <div class="order-info">
             <strong>${o.productName}</strong>
             <div class="muted">Qty ${o.quantity} • $${(o.price || 0).toFixed(2)}</div>
-            <div class="muted">User: ${o.uid || ""}</div>
+            <div class="muted small">User: ${o.uid || "Unknown"}</div>
+            <div class="muted small">ID: ${o.id}</div>
           </div>
           <div class="order-meta">
-            <span class="badge">${o.status || "pending"}</span>
-            <span class="muted">${dateStr}</span>
+            <span class="badge ${statusClass}">${o.status || "pending"}</span>
+            <span class="muted small">${dateStr}</span>
           </div>`;
         list.appendChild(row);
       });
@@ -63,13 +69,23 @@ import { getAllProducts, addProduct, updateProduct, deleteProduct } from "./prod
       ordersListEl.appendChild(list);
     } catch (err) {
       console.error("Admin loadOrders error", err);
-      ordersListEl.textContent = "Failed to load orders.";
+      if (err.code === 'failed-precondition') {
+        ordersListEl.innerHTML = `
+           <div class="auth-message error">
+             <strong>Missing Index</strong><br>
+             This query requires a Firestore Index.<br>
+             <a href="https://console.firebase.google.com/project/${window.firebaseConfig?.projectId || '_'}/firestore/indexes" target="_blank" style="text-decoration: underline;">Open Console to Create Index</a>
+             <br><small>Look for the link in the console error log for the direct creation URL.</small>
+           </div>`;
+      } else {
+        ordersListEl.innerHTML = `<div class="auth-message error">Failed to load orders: ${err.message}</div>`;
+      }
     }
   }
 
   async function loadClients() {
     if (!clientsListEl) return;
-    clientsListEl.textContent = "Loading clients...";
+    clientsListEl.innerHTML = '<div class="muted">Loading clients...</div>';
     try {
       const { collection, getDocs } = await import(
         "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
@@ -77,23 +93,26 @@ import { getAllProducts, addProduct, updateProduct, deleteProduct } from "./prod
       const snap = await getDocs(collection(db, "users"));
       const users = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       clientsCountEl.textContent = String(users.length);
+
       if (!users.length) {
-        clientsListEl.textContent = "No clients yet.";
+        clientsListEl.innerHTML = '<div class="muted">No clients found.</div>';
         return;
       }
+
       const list = document.createElement("div");
       list.className = "list-stack";
       users.forEach((u) => {
         const row = document.createElement("div");
         row.className = "order-row";
         row.innerHTML = `
-          <div>
-            <strong>${u.displayName || u.firstName || u.email}</strong>
-            <div class="muted">${u.email || ""}</div>
-            <div class="muted">${u.phone || ""}</div>
+          <div class="client-info">
+            <strong>${u.displayName || u.firstName || "No Name"}</strong>
+            <div class="muted">${u.email || "No Email"}</div>
+            <div class="muted small">${u.phone || "No Phone"}</div>
+            <div class="muted small">UID: ${u.uid}</div>
           </div>
           <div class="order-meta">
-            <span class="badge">${u.role || "user"}</span>
+            <span class="badge ${u.role === 'admin' ? 'success' : ''}">${u.role || "user"}</span>
           </div>`;
         list.appendChild(row);
       });
@@ -101,7 +120,7 @@ import { getAllProducts, addProduct, updateProduct, deleteProduct } from "./prod
       clientsListEl.appendChild(list);
     } catch (err) {
       console.error("Admin loadClients error", err);
-      clientsListEl.textContent = "Failed to load clients.";
+      clientsListEl.innerHTML = `<div class="auth-message error">Failed to load clients: ${err.message}</div>`;
     }
   }
 
