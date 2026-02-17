@@ -14,25 +14,30 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
 
-    // Users collection - users manage their own doc, admins manage all
+    // Collection Group Queries require a global rule
+    match /{path=**}/orders/{orderId} {
+      allow read: if isAdmin();
+    }
+
+    // Users collection
     match /users/{userId} {
       allow read, update, delete: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId) || isAdmin();
     }
 
-    // Products collection - readable by anyone, writable by admins only
+    // Products collection
     match /products/{productId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Orders subcollection under each user
+    // Orders subcollection under each user (for individual access)
     match /users/{userId}/orders/{orderId} {
       allow read, create, update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
     }
 
-    // Default: deny all other access
+    // Default: deny
     match /{document=**} {
       allow read, write: if false;
     }

@@ -307,6 +307,51 @@ import { getAllProducts, addProduct, updateProduct, deleteProduct } from "./prod
     });
   }
 
+  // --- Product Seeding ---
+  const seedBtn = document.getElementById("adminSeedBtn");
+  if (seedBtn) {
+    seedBtn.addEventListener("click", async () => {
+      const confirmSeed = confirm("This will upload products from the local data file to the database. Continue?");
+      if (!confirmSeed) return;
+
+      if (!window.PRODUCTS || !window.PRODUCTS.length) {
+        alert("No local product data found in window.PRODUCTS!");
+        return;
+      }
+
+      seedBtn.textContent = "Seeding...";
+      seedBtn.disabled = true;
+
+      try {
+        let count = 0;
+        for (const p of window.PRODUCTS) {
+          // check if exists first? strict dedupe might be too slow for now, let's just add.
+          // Actually, better to use setDoc with a predictable ID if possible, but our PRODUCTS have "id".
+          // Let's use that ID to prevent duplicates.
+          const { doc, setDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+          await setDoc(doc(db, "products", p.id), {
+            name: p.name,
+            description: p.description,
+            price: p.price,
+            imageUrl: p.image, // map 'image' to 'imageUrl'
+            tags: p.tags || [],
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+          count++;
+        }
+        alert(`Successfully seeded ${count} products! Refreshing...`);
+        loadProductsForEdit();
+      } catch (err) {
+        console.error("Seed error:", err);
+        alert("Seeding failed: " + err.message);
+      } finally {
+        seedBtn.textContent = "Restock / Seed Products";
+        seedBtn.disabled = false;
+      }
+    });
+  }
+
   // Initial Load (Orders is default)
   loadOrders();
 })();
