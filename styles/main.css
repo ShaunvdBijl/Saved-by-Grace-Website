@@ -502,35 +502,77 @@ img {
 }
 
 .list-stack {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
 }
 
 .order-row {
   display: flex;
   justify-content: space-between;
+  align-items: center; /* Better alignment */
   gap: 1rem;
-  padding: 0.8rem;
+  padding: 1rem;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
   background: #fff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.order-meta {
-  display: grid;
-  justify-items: end;
+.order-row:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.order-info, .client-info {
+  display: flex;
+  flex-direction: column;
   gap: 0.2rem;
 }
 
+.order-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+  text-align: right;
+  min-width: 100px; /* Prevent wrapping squish */
+}
+
 .badge {
-  display: inline-block;
-  padding: 0.25rem 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.8rem;
   border-radius: 999px;
-  background: #f3e5eb;
-  color: var(--primary-dark);
-  font-weight: 700;
-  font-size: 0.85rem;
+  background: #f0f0f0;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.8rem;
   text-transform: capitalize;
+  letter-spacing: 0.3px;
+}
+
+.badge.success {
+  background: #e6f6e6;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
+
+.badge.warning {
+  background: #fff8e1;
+  color: #f57f17;
+  border: 1px solid #ffecb3;
+}
+
+.badge.error {
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
+
+.small {
+  font-size: 0.85rem;
 }
 
 .cards-row {
