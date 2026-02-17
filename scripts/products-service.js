@@ -3,8 +3,9 @@ export async function getAllProducts(db) {
   const { collection, getDocs, orderBy, query } = await import(
     "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
   );
-  const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
-  const snap = await getDocs(q);
+  // Remove orderBy for now to ensure we get results even if createdAt is missing or index is creating
+  // const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
+  const snap = await getDocs(collection(db, "products"));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
