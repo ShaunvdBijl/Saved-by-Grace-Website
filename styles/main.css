@@ -75,80 +75,132 @@ img {
   border-radius: var(--radius-sm);
 }
 
-/* Glassmorphism Header */
+/* Split Header Layout */
 .site-header {
-  position: sticky;
-  top: 1rem;
-  margin: 0 1rem;
-  padding: 0.8rem 1.5rem;
+  position: relative;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  max-width: none;
+  display: block;
+}
+
+.brand-bar {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  background: var(--surface-trans);
-  backdrop-filter: var(--glass);
-  -webkit-backdrop-filter: var(--glass);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 999px;
-  /* Floating rounded nav */
-  box-shadow: var(--shadow-sm);
-  z-index: 100;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
+  justify-content: center;
+  padding: 2.5rem 1rem 2rem;
+  /* Slightly darker as requested (0.08 -> 0.12) */
+  background: rgba(176, 93, 118, 0.12);
+  text-align: center;
 }
 
 .logo-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
+  flex-direction: column;
+  gap: 0.8rem;
 }
 
 .logo {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-  border-radius: 10px;
-  background: #fff;
-  border: 1px solid var(--border);
-  padding: 6px;
+  width: 100px;
+  /* Larger Logo */
+  height: 100px;
+  border: none;
+  background: transparent;
+  /* Optically align with the 'G' in "Saved by Grace" 
+     Since "Saved by" (left) is longer than "Grace" (right), 
+     the geometric center is left of the 'G'. 
+     We shift the logo RIGHT to align with 'G'. */
+  transform: translateX(140px);
 }
 
 .brand {
-  font-weight: 700;
-  letter-spacing: 0.4px;
+  font-size: 2.2rem;
+  /* Grand Typography */
+  font-family: var(--font-heading);
+  color: var(--primary-dark);
+  letter-spacing: 0.02em;
+}
+
+/* Sticky Nav Bar - Chunkier */
+.nav-bar {
+  background: var(--primary);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: var(--shadow-md);
+  padding: 1.2rem 2rem;
+  /* Increased size */
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .nav {
   display: flex;
-  gap: 0.75rem;
+  gap: 2.5rem;
+  /* More spacing between links */
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
-/* Modern Links */
 .nav-link {
-  color: var(--text-light);
-  font-weight: 500;
-  padding: 0.5rem 1rem;
-  border-radius: 99px;
-  transition: all 0.2s ease;
+  color: rgba(255, 255, 255, 0.95);
+  padding: 0.5rem 0;
+  /* Removing horiz padding to focus on spacing gap */
+  font-size: 1.05rem;
+  /* Larger text */
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  font-family: var(--font-body);
+  position: relative;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 100%;
 }
 
 .nav-link:hover,
 .nav-link.active {
-  background: rgba(176, 93, 118, 0.08);
-  /* Primary subtle */
-  color: var(--primary);
+  background: transparent;
+  color: #fff;
+  box-shadow: none;
 }
 
 .nav-cta {
-  background: var(--primary) !important;
-  color: #fff !important;
-  box-shadow: 0 4px 12px rgba(176, 93, 118, 0.3);
+  background: #fff !important;
+  color: var(--primary) !important;
+  font-weight: 700;
+  padding: 0.6rem 1.4rem;
+  border-radius: 99px;
+  margin-left: 1rem;
 }
 
 .nav-cta:hover {
-  background: var(--primary-dark) !important;
-  transform: translateY(-1px);
+  background: var(--surface) !important;
+  transform: translateY(-2px);
+  color: var(--primary-dark) !important;
+}
+
+.nav-cta::after {
+  display: none;
 }
 
 /* Hero Section */
@@ -644,6 +696,43 @@ textarea:focus {
 
 .dashboard-products {
   margin-top: 1rem;
+}
+
+.site-footer {
+  padding: 3rem 6vw;
+  /* Dark Footer for Contrast */
+  background: var(--primary-dark);
+  color: #fff;
+  /* White text */
+  text-align: center;
+  margin-top: 4rem;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.site-footer p {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.footer-links a {
+  color: #fff;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.4);
+  text-underline-offset: 4px;
+}
+
+.footer-links a:hover {
+  color: var(--accent-light);
+  text-decoration-color: var(--accent-light);
 }
 
 /* Modal */
