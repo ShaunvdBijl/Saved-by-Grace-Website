@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Saved by Grace Bakery | Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles/main.css">
 </head>
+
 <body>
   <header class="site-header">
     <div class="logo-wrap">
@@ -100,9 +102,33 @@
       <div class="panel-header">
         <h2>Delete product</h2>
       </div>
-      <p class="muted">Click a product to delete it (you will be asked twice to confirm).</p>
+      <p class="muted">Click a product image to delete it (you will be asked twice to confirm).</p>
       <div id="adminDeleteProducts" class="products-grid dashboard-products"></div>
     </section>
+
+    <!-- Edit Product Modal -->
+    <div class="modal hidden" id="editProductModal">
+      <div class="modal-content">
+        <button class="modal-close" id="editProductModalClose">×</button>
+        <h3>Edit Product</h3>
+        <form id="editProductForm" class="order-form">
+          <input type="hidden" name="id">
+          <label>Name
+            <input type="text" name="name" required>
+          </label>
+          <label>Description
+            <textarea name="description" rows="3" required></textarea>
+          </label>
+          <label>Price
+            <input type="number" name="price" step="0.01" min="0" required>
+          </label>
+          <label>Image URL
+            <input type="url" name="imageUrl" required>
+          </label>
+          <button type="submit" class="btn primary">Save Changes</button>
+        </form>
+      </div>
+    </div>
   </main>
 
   <footer class="site-footer">
@@ -142,5 +168,5 @@
   <script type="module" src="scripts/admin.js"></script>
   <script src="scripts/main.js"></script>
 </body>
-</html>
 
+</html>

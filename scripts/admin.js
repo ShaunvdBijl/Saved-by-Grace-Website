@@ -5,26 +5,44 @@ import { getAllProducts, addProduct, updateProduct, deleteProduct } from "./prod
   const { user, userDoc } = await requireAdmin();
   const db = window.firebaseDb;
 
+  // --- UI Elements ---
   const greetingEl = document.getElementById("adminGreeting");
-  if (greetingEl) {
-    const first = userDoc?.firstName || user.displayName?.split(" ")[0] || "Admin";
-    greetingEl.textContent = `Welcome, ${first}`;
-  }
-
   const ordersCountEl = document.getElementById("adminOrdersCount");
   const clientsCountEl = document.getElementById("adminClientsCount");
   const ordersListEl = document.getElementById("adminOrdersList");
   const clientsListEl = document.getElementById("adminClientsList");
 
+  // Edit Modal Elements
+  const editModal = document.getElementById("editProductModal");
+  const editModalClose = document.getElementById("editProductModalClose");
+  const editForm = document.getElementById("editProductForm");
+
+  if (greetingEl) {
+    const first = userDoc?.firstName || user.displayName?.split(" ")[0] || "Admin";
+    greetingEl.textContent = `Welcome, ${first}`;
+  }
+
+  // --- View Switching ---
   const viewSections = document.querySelectorAll(".admin-view");
   document.querySelectorAll("[data-view]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const target = btn.getAttribute("data-view");
+
+      // Toggle visibility
       viewSections.forEach((sec) => {
-        sec.classList.toggle("hidden", !sec.id.toLowerCase().includes(target));
+        const isMatch = sec.id.toLowerCase().includes(target);
+        sec.classList.toggle("hidden", !isMatch);
       });
+
+      // Load data based on view
+      if (target === "orders") loadOrders();
+      if (target === "clients") loadClients();
+      if (target === "edit") loadProductsForEdit();
+      if (target === "delete") loadProductsForDelete();
     });
   });
+
+  // --- Data Loading Functions ---
 
   async function loadOrders() {
     if (!ordersListEl) return;
@@ -124,71 +142,136 @@ import { getAllProducts, addProduct, updateProduct, deleteProduct } from "./prod
     }
   }
 
+  // --- Product Management ---
+
   async function loadProductsForEdit() {
     const container = document.getElementById("adminEditProducts");
     if (!container) return;
-    container.innerHTML = "";
-    const products = await getAllProducts(db);
-    products.forEach((p) => {
-      const card = document.createElement("article");
-      card.className = "product-card order-card";
-      card.innerHTML = `
-        <img src="${p.imageUrl}" alt="${p.name}">
-        <div class="product-body">
-          <h3>${p.name}</h3>
-          <p class="muted">$${(p.price || 0).toFixed(2)}</p>
-          <button class="btn full">Edit</button>
-        </div>`;
-      card.querySelector("button").addEventListener("click", () => openEditPrompt(p));
-      container.appendChild(card);
+    container.innerHTML = '<div class="muted">Loading products...</div>';
+    try {
+      const products = await getAllProducts(db);
+      container.innerHTML = "";
+
+      if (products.length === 0) {
+        container.innerHTML = '<div class="muted">No products found.</div>';
+        return;
+      }
+
+      products.forEach((p) => {
+        const card = document.createElement("article");
+        card.className = "product-card order-card";
+        // Prompt to click image
+        card.innerHTML = `
+          <img src="${p.imageUrl}" alt="${p.name}" style="cursor: pointer;" title="Click image to edit">
+          <div class="product-body">
+            <h3>${p.name}</h3>
+            <p class="muted">$${(p.price || 0).toFixed(2)}</p>
+            <p class="muted small">Click image to edit</p>
+          </div>`;
+
+        // Image click triggers edit modal
+        const img = card.querySelector("img");
+        img.addEventListener("click", () => openEditModal(p));
+
+        container.appendChild(card);
+      });
+    } catch (err) {
+      container.innerHTML = `<div class="auth-message error">Failed to load products: ${err.message}</div>`;
+    }
+  }
+
+  function openEditModal(product) {
+    if (!editModal || !editForm) return;
+
+    // Populate form
+    editForm.querySelector('[name="id"]').value = product.id;
+    editForm.querySelector('[name="name"]').value = product.name;
+    editForm.querySelector('[name="description"]').value = product.description || "";
+    editForm.querySelector('[name="price"]').value = product.price;
+    editForm.querySelector('[name="imageUrl"]').value = product.imageUrl || "";
+
+    editModal.classList.remove("hidden");
+  }
+
+  if (editModalClose) {
+    editModalClose.addEventListener("click", () => {
+      editModal.classList.add("hidden");
     });
   }
 
-  function openEditPrompt(product) {
-    const name = prompt("Name:", product.name);
-    if (name === null) return;
-    const priceStr = prompt("Price:", product.price);
-    if (priceStr === null) return;
-    const description = prompt("Description:", product.description || "");
-    if (description === null) return;
-    const imageUrl = prompt("Image URL:", product.imageUrl || "");
-    if (imageUrl === null) return;
-    const price = parseFloat(priceStr);
-    updateProduct(db, product.id, { name, price, description, imageUrl })
-      .then(loadProductsForEdit)
-      .catch((err) => alert("Update failed: " + err.message));
+  // Close on outside click
+  window.addEventListener("click", (e) => {
+    if (e.target === editModal) {
+      editModal.classList.add("hidden");
+    }
+  });
+
+  if (editForm) {
+    editForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData(editForm);
+      const id = formData.get("id");
+      const name = formData.get("name");
+      const description = formData.get("description");
+      const price = parseFloat(formData.get("price"));
+      const imageUrl = formData.get("imageUrl");
+
+      try {
+        await updateProduct(db, id, { name, description, price, imageUrl });
+        alert("Product updated successfully!");
+        editModal.classList.add("hidden");
+        loadProductsForEdit(); // Refresh list
+      } catch (err) {
+        alert("Update failed: " + err.message);
+      }
+    });
   }
 
   async function loadProductsForDelete() {
     const container = document.getElementById("adminDeleteProducts");
     if (!container) return;
-    container.innerHTML = "";
-    const products = await getAllProducts(db);
-    products.forEach((p) => {
-      const card = document.createElement("article");
-      card.className = "product-card order-card";
-      card.innerHTML = `
-        <img src="${p.imageUrl}" alt="${p.name}">
-        <div class="product-body">
-          <h3>${p.name}</h3>
-        </div>`;
-      card.addEventListener("click", async () => {
-        const first = confirm(`Are you sure you want to delete ${p.name}?`);
-        if (!first) return;
-        const second = confirm(`This cannot be undone. Delete ${p.name}?`);
-        if (!second) return;
-        try {
-          await deleteProduct(db, p.id);
-          await loadProductsForDelete();
-          await loadProductsForEdit();
-        } catch (err) {
-          alert("Delete failed: " + err.message);
-        }
+    container.innerHTML = '<div class="muted">Loading products...</div>';
+
+    try {
+      const products = await getAllProducts(db);
+      container.innerHTML = "";
+
+      if (products.length === 0) {
+        container.innerHTML = '<div class="muted">No products found.</div>';
+        return;
+      }
+
+      products.forEach((p) => {
+        const card = document.createElement("article");
+        card.className = "product-card order-card";
+        card.innerHTML = `
+          <img src="${p.imageUrl}" alt="${p.name}" style="cursor: pointer;" title="Click to delete">
+          <div class="product-body">
+            <h3>${p.name}</h3>
+            <p class="muted small">Click image to delete</p>
+          </div>`;
+
+        card.querySelector("img").addEventListener("click", async () => {
+          const first = confirm(`Are you sure you want to delete "${p.name}"?`);
+          if (!first) return;
+          const second = confirm(`This CANNOT be undone. Really delete "${p.name}"?`);
+          if (!second) return;
+          try {
+            await deleteProduct(db, p.id);
+            alert("Product deleted.");
+            loadProductsForDelete();
+          } catch (err) {
+            alert("Delete failed: " + err.message);
+          }
+        });
+        container.appendChild(card);
       });
-      container.appendChild(card);
-    });
+    } catch (err) {
+      container.innerHTML = `<div class="auth-message error">Failed to load products: ${err.message}</div>`;
+    }
   }
 
+  // --- Add Product Form ---
   const addForm = document.getElementById("adminAddForm");
   const addMsg = document.getElementById("adminAddMessage");
   if (addForm) {
@@ -214,8 +297,8 @@ import { getAllProducts, addProduct, updateProduct, deleteProduct } from "./prod
         addMsg.className = "auth-message success";
         addMsg.style.display = "block";
         addForm.reset();
-        await loadProductsForEdit();
-        await loadProductsForDelete();
+        // Refresh other views if they are open (rare, but good practice)
+        // We really only need to reload if user switches to Edit/Delete view, which happens on click anyway.
       } catch (err) {
         addMsg.textContent = err.message || "Failed to create product.";
         addMsg.className = "auth-message error";
@@ -224,9 +307,6 @@ import { getAllProducts, addProduct, updateProduct, deleteProduct } from "./prod
     });
   }
 
+  // Initial Load (Orders is default)
   loadOrders();
-  loadClients();
-  loadProductsForEdit();
-  loadProductsForDelete();
 })();
-
