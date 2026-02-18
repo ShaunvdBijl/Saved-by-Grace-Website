@@ -12,6 +12,23 @@ import { getAllProducts, addProduct, updateProduct, deleteProduct } from "./prod
   const ordersListEl = document.getElementById("adminOrdersList");
   const clientsListEl = document.getElementById("adminClientsList");
 
+  // Logout Logic
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      try {
+        const { getAuth, signOut } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+        const auth = window.firebaseAuth || getAuth();
+        await signOut(auth);
+        window.location.href = "login.html";
+      } catch (err) {
+        console.error("Logout failed", err);
+        alert("Logout failed: " + err.message);
+      }
+    });
+  }
+
   // Edit Modal Elements
   const editModal = document.getElementById("editProductModal");
   const editModalClose = document.getElementById("editProductModalClose");
