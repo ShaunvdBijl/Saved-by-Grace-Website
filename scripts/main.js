@@ -87,6 +87,9 @@ async function initializeGlobalAuth(auth, db) {
         }
       }
     }
+
+    // Remove the loading overlay once auth state is resolved and nav is updated
+    document.body.classList.remove('page-loading');
   });
 }
 
@@ -99,3 +102,9 @@ if (window.firebaseAuth && window.firebaseDb) {
     initializeGlobalAuth(e.detail.auth, e.detail.db);
   });
 }
+
+// Fallback: If Firebase fails to initialize, remove the loading screen so the user can still look at the site
+window.addEventListener('firebaseError', () => {
+  document.body.classList.remove('page-loading');
+});
+
