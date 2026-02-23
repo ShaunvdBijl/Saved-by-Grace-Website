@@ -15,8 +15,7 @@
 })();
 
 // Global Auth State Listener
-window.addEventListener('firebaseReady', async (e) => {
-  const { auth, db } = e.detail;
+async function initializeGlobalAuth(auth, db) {
   const { onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
   const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
 
@@ -89,5 +88,14 @@ window.addEventListener('firebaseReady', async (e) => {
       }
     }
   });
-});
+}
 
+// Check if Firebase is already ready (main.js loaded after init)
+if (window.firebaseAuth && window.firebaseDb) {
+  initializeGlobalAuth(window.firebaseAuth, window.firebaseDb);
+} else {
+  // Otherwise wait for the event
+  window.addEventListener('firebaseReady', (e) => {
+    initializeGlobalAuth(e.detail.auth, e.detail.db);
+  });
+}
