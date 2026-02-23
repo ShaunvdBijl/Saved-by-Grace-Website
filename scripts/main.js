@@ -46,8 +46,10 @@ window.addEventListener('firebaseReady', async (e) => {
       // 2. Update navigation links (e.g. replacing 'Login' with 'Dashboard')
       const navLinks = document.querySelectorAll(".nav-link");
       navLinks.forEach(link => {
-        const href = link.getAttribute("href");
-        if (['login.html', 'signup.html', 'auth.html'].includes(href)) {
+        if (link.id === 'logoutBtn') return; // Do not transform the logout button
+
+        const href = link.getAttribute("href") || "";
+        if (href.endsWith('login.html') || href.endsWith('signup.html') || href.endsWith('auth.html')) {
           link.setAttribute("href", dashboardUrl);
           link.textContent = dashboardText;
         }
